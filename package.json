@@ -1,0 +1,37 @@
+{
+  "name": "botbuilder-wit",
+  "version": "1.0.0",
+  "description": "Provides Wit.ai NLP integration for the Microsoft Bot Framework",
+  "main": "lib/botbuilder-wit.js",
+  "scripts": {
+    "build": "./node_modules/.bin/tsc",
+    "test": "./node_modules/.bin/_mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sebsylvester/botbuilder-wit.git"
+  },
+  "keywords": [
+    "Microsoft Bot Framework",
+    "botbuilder",
+    "chatbots",
+    "bots",
+    "witai",
+    "wit",
+    "nlp"
+  ],
+  "author": "Sebastian Sylvester",
+  "license": "MIT",
+  "bugs": "https://github.com/sebsylvester/botbuilder-wit/issues",
+  "homepage": "https://github.com/sebsylvester/botbuilder-wit",
+  "dependencies": {
+    "node-wit": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^6.0.55",
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "sinon": "^1.17.6",
+    "typescript": "^2.1.4"
+  }
+}
