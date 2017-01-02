@@ -28,6 +28,15 @@ const { EntityRecognizer } = require('botbuilder');
 const location = EntityRecognizer.findEntity(args.entities, 'location')
 ```
 
+## Using the Wit.ai client
+You can still use the Wit.ai client directly by accessing the ```witClient``` property of the instantiated WitRecognizer.
+```
+const recognizer = new WitRecognizer('Wit.ai_access_token');
+const witClient = recognizer.witClient;
+```
+## Recompiling the TypeScript source
+If you want to recompile the source, you will need to make sure the ```node-wit``` dependency has a type definitions file in its root directory. At the moment, they're not yet available in the DefinitelyTyped repository. However, in the resources directory you'll find a minimalistic version that will do the job.
+
 ## License
 
 MIT
