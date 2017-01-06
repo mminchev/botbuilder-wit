@@ -1,7 +1,7 @@
 {
   "name": "botbuilder-wit",
   "version": "1.0.3",
-  "description": "Provides Wit.ai NLP integration for the Microsoft Bot Framework",
+  "description": "Provides Wit.ai NLP integration for the Microsoft Bot Builder SDK",
   "main": "lib/WitRecognizer.js",
   "scripts": {
     "build": "./node_modules/.bin/tsc",
