@@ -103,7 +103,7 @@ class WitRecognizer {
                         // Otherwise, the Bot Builder SDK will trigger the dialog's default handler
                         // with a default result object => { score: 0.0, intent: null }.
                         // Any other entities will not be included. The action below prevents this behavior.
-                        if(!result.intent) {
+                        if (!result.intent) {
                             result.intent = 'none';
                             result.score = 1.0;
                         }
@@ -130,7 +130,7 @@ class WitRecognizer {
                                     // For example, a datetime entity of type "value" will get a universal timestamp
                                     // as its value which cannot be found in the original message.
                                     foundEntity.startIndex = response._text.indexOf(value);
-                                    foundEntity.endIndex = foundEntity.startIndex + (value.length -1);
+                                    foundEntity.endIndex = foundEntity.startIndex + (value.length - 1);
                                 }
                                 result.entities.push(foundEntity);
                             }
