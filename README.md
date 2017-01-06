@@ -1,5 +1,5 @@
 # botbuilder-wit
-Node.js module that provides [Wit.ai](https://wit.ai) NLP integration for the [Microsoft Bot Framework](https://dev.botframework.com/).
+Node.js module that provides [Wit.ai](https://wit.ai) NLP integration for the [Microsoft Bot Builder SDK](https://dev.botframework.com/).
 
 ## Installation
 
