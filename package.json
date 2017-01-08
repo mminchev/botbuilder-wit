@@ -31,7 +31,6 @@
   "devDependencies": {
     "@types/node": "^6.0.55",
     "chai": "^3.5.0",
-    "coveralls": "^2.11.15",
     "istanbul": "^0.4.5",
     "mocha": "^3.2.0",
     "sinon": "^1.17.6",
