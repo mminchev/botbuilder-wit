@@ -1,4 +1,4 @@
-# botbuilder-wit
+# botbuilder-wit [![npm version](https://badge.fury.io/js/botbuilder-wit.svg)](https://badge.fury.io/js/botbuilder-wit)
 Node.js module that provides [Wit.ai](https://wit.ai) NLP integration for the [Microsoft Bot Builder SDK](https://dev.botframework.com/).
 
 ## Installation
