@@ -53,28 +53,39 @@ interface IWitResults {
     error?: string;
 }
 
+
+/**
+ * The WitRecognizer class that is used in conjunction with an IntentDialog.
+ * Example:
+ * const recognizer = new WitRecognizer('Wit.ai_access_token');
+ * const dialog = new IntentDialog({recognizers: [recognizer]});
+ */
 class WitRecognizer {
-    private _witClient: Wit;
+    public witClient: Wit;
 
+    /**
+     * Creates an instance of WitRecognizer. Requires a valid API token from Wit.ai
+     * @param accessToken {string}
+     */
     constructor(accessToken: string) {
-        this._witClient = new Wit({ accessToken });
+        this.witClient = new Wit({ accessToken });
     }
 
-    get witClient(): Wit {
-        return this._witClient;
-    }
-
+    /**
+     * Makes a request to Wit.ai and parses the response in a way the Bot Builder SDK understands
+     * @param context {Object}
+     * @param done {function}
+     */
     recognize(context: IRecognizeContext, done: (err: Error, result: IIntentRecognizerResult) => void) {
         let result = <IIntentRecognizerResult>{ score: 0.0, intent: null };
         if (context && context.message && context.message.text) {
             const utterance = context.message.text;
 
             // Send a request to Wit.ai
-            this._witClient.message(utterance)
+            this.witClient.message(utterance)
                 .then((response: IWitResults) => {
                     // Check if Wit.ai responded with an error
                     if (response.error) {
-                        console.log(response);
                         return done(new Error(response.error), null);
                     }
 
