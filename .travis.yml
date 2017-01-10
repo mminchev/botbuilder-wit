@@ -1,7 +1,9 @@
 sudo: false
 language: node_js
 node_js:
-- node
+  - node
 install:
   - npm install
+before_script:
+  - cp resources/index.d.ts node_modules/node_wit
 script: npm run build && npm run coverage
