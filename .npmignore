@@ -1,6 +1,9 @@
 .idea
 .vscode
+.nyc_output
 src
 test
 tsconfig.json
 coverage
+test/*.*
+!test/*.ts
