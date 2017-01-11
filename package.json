@@ -4,9 +4,10 @@
   "description": "Provides Wit.ai NLP integration for the Microsoft Bot Builder SDK",
   "main": "lib/WitRecognizer.js",
   "scripts": {
-    "build": "./node_modules/.bin/tsc",
-    "test": "./node_modules/.bin/_mocha",
-    "coverage": "istanbul cover ./node_modules/.bin/_mocha"
+    "build": "tsc",
+    "pretest": "tsc test/*.ts --module commonjs --sourcemap && ls test/",
+    "test": "nyc mocha",
+    "posttest": "nyc report --reporter=json && codecov -f coverage/*.json"
   },
   "repository": {
     "type": "git",
@@ -27,10 +28,14 @@
     "node-wit": "^4.2.0"
   },
   "devDependencies": {
+    "@types/chai": "^3.4.34",
+    "@types/es6-promise": "0.0.32",
+    "@types/mocha": "^2.2.37",
     "@types/node": "^6.0.59",
     "chai": "^3.5.0",
-    "istanbul": "^0.4.5",
+    "codecov": "^1.0.1",
     "mocha": "^3.2.0",
+    "nyc": "^10.0.0",
     "sinon": "^1.17.6",
     "typescript": "^2.1.4"
   }
