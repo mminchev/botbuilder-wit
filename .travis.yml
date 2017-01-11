@@ -5,5 +5,7 @@ node_js:
 install:
   - npm install
 before_script:
-  - cp resources/index.d.ts node_modules/node_wit
-script: npm run build && npm run coverage
+  - cp ./resources/index.d.ts ./node_modules/node-wit/
+script:
+  - npm run build
+  - npm test
