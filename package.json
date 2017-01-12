@@ -5,7 +5,7 @@
   "main": "lib/WitRecognizer.js",
   "scripts": {
     "build": "tsc",
-    "pretest": "tsc test/*.ts --module commonjs --sourcemap && ls test/",
+    "pretest": "tsc test/*.ts --module commonjs --sourcemap",
     "test": "nyc mocha",
     "posttest": "nyc report --reporter=json && codecov -f coverage/*.json"
   },
@@ -29,7 +29,6 @@
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
-    "@types/es6-promise": "0.0.32",
     "@types/mocha": "^2.2.37",
     "@types/node": "^6.0.59",
     "chai": "^3.5.0",
