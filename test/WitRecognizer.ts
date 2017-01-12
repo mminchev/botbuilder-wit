@@ -1,3 +1,4 @@
+///<reference path="../node_modules/typescript/lib/lib.es6.d.ts" />
 const WitRecognizer = require('../lib/WitRecognizer');
 import { Wit } from 'node-wit';
 import { expect } from 'chai';
