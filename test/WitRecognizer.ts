@@ -36,13 +36,13 @@ describe('WitRecognizer', function () {
             code : "no-auth"
         };
 
-        // Response from Wit.ai when no intent could be found
+        // Response from Wit.ai when no intent or other entities were found
         const wit_no_entities_response = {
             _text: "default",
             entities: {}
         };
 
-        // Response from Wit.ai when
+        // Response from Wit.ai when no intent was found, but there are other entities
         const wit_no_intent_response = {
             _text: "There's a bar and a baz in here somewhere",
             entities: {
@@ -51,13 +51,60 @@ describe('WitRecognizer', function () {
             }
         };
 
-        // Response from Wit.ai when an intent and two entities were be found
-        const wit_intent_response = {
+        // Response from Wit.ai when only an intent was found
+        const wit_intent_only_response = {
+            _text: "There's a bar and a baz in here somewhere",
+            entities: {
+                intent: [{ value: "foo", confidence: 0.99 }]
+            }
+        };
+
+        // Response from Wit.ai when an intent and two entities were found
+        const wit_intent_plus_response = {
             _text: "There's a bar and a baz in here somewhere",
             entities: {
                 intent: [{ value: "foo", confidence: 0.99 }],
                 bar_entity: [{ type: "value", value: "bar", confidence: 0.95 }],
                 baz_entity: [{ type: "value", value: "baz", confidence: 0.85 }]
+            }
+        };
+
+        // Response from Wit.ai when an intent and two entities were found, one of which is of type 'interval'
+        const wit_intent_plus_interval_response = {
+            "msg_id" : "a7033991-c2e6-4ccb-b8b6-f0e77f7fc2f6",
+            "_text" : " Set the alarm tomorrow morning",
+            "entities" : {
+                intent: [{ value: "set_alarm", confidence: 0.99 }],
+                "reminder" : [ {
+                    "confidence" : 0.7947374127577925,
+                    "entities" : { },
+                    "type" : "value",
+                    "value" : "Set the alarm",
+                    "suggested" : true
+                } ],
+                "datetime" : [ {
+                    "confidence" : 0.9978530104247438,
+                    "values" : [ {
+                        "to" : {
+                            "value" : "2017-01-14T12:00:00.000Z",
+                            "grain" : "hour"
+                        },
+                        "from" : {
+                            "value" : "2017-01-14T04:00:00.000Z",
+                            "grain" : "hour"
+                        },
+                        "type" : "interval"
+                    } ],
+                    "to" : {
+                        "value" : "2017-01-14T12:00:00.000Z",
+                        "grain" : "hour"
+                    },
+                    "from" : {
+                        "value" : "2017-01-14T04:00:00.000Z",
+                        "grain" : "hour"
+                    },
+                    "type" : "interval"
+                } ]
             }
         };
 
@@ -85,7 +132,7 @@ describe('WitRecognizer', function () {
                 }
             ]
         };
-        const successResult = {
+        const successResultOfIntentPlus = {
             intent: 'foo',
             score: 0.99,
             intents: [{ intent: 'foo', score: 0.99 }],
@@ -109,6 +156,62 @@ describe('WitRecognizer', function () {
             ]
         };
 
+        const successResultOfIntentPlusInterval = {
+            score: 0.99,
+            intent: 'set_alarm',
+            intents: [ { intent: 'set_alarm', score: 0.99 } ],
+            entities: [
+                {
+                    type: 'reminder',
+                    entity: 'Set the alarm',
+                    rawEntity: {
+                        "confidence" : 0.7947374127577925,
+                        "entities" : { },
+                        "type" : "value",
+                        "value" : "Set the alarm",
+                        "suggested" : true
+                    },
+                    score: 0.7947374127577925,
+                    startIndex: 1,
+                    endIndex: 13
+                },
+                {
+                    type: 'datetime',
+                    entity: null,
+                    rawEntity: {
+                        "confidence" : 0.9978530104247438,
+                        "values" : [ {
+                            "to" : {
+                                "value" : "2017-01-14T12:00:00.000Z",
+                                "grain" : "hour"
+                            },
+                            "from" : {
+                                "value" : "2017-01-14T04:00:00.000Z",
+                                "grain" : "hour"
+                            },
+                            "type" : "interval"
+                        } ],
+                        "to" : {
+                            "value" : "2017-01-14T12:00:00.000Z",
+                            "grain" : "hour"
+                        },
+                        "from" : {
+                            "value" : "2017-01-14T04:00:00.000Z",
+                            "grain" : "hour"
+                        },
+                        "type" : "interval"
+                    },
+                    score: 0.9978530104247438
+                }
+            ]
+        };
+
+        const successResultOfIntentOnly = {
+            intent: 'foo',
+            score: 0.99,
+            intents: [{ intent: 'foo', score: 0.99 }],
+        };
+
         // Create a mock of the Wit.ai client
         function Wit() {}
         Wit.prototype.message = function (message) {
@@ -124,8 +227,14 @@ describe('WitRecognizer', function () {
                 case 'no intent':
                     promise = Promise.resolve(wit_no_intent_response);
                     break;
-                case 'intent':
-                    promise = Promise.resolve(wit_intent_response);
+                case 'intent only':
+                    promise = Promise.resolve(wit_intent_only_response);
+                    break;
+                case 'intent plus':
+                    promise = Promise.resolve(wit_intent_plus_response);
+                    break;
+                case 'intent plus interval':
+                    promise = Promise.resolve(wit_intent_plus_interval_response);
                     break;
                 case 'exception':
                     promise = Promise.reject(new Error('Something failed'));
@@ -165,14 +274,28 @@ describe('WitRecognizer', function () {
             });
         });
 
-        it('should receive the success result if an intent was found', function (done) {
-            witRecognizer.recognize({ message: { text: 'intent' }}, function (err, result) {
-                expect(result).to.deep.equal(successResult);
+        it('should receive the success result if an intent plus another entity were found (1)', function (done) {
+            witRecognizer.recognize({ message: { text: 'intent plus' }}, function (err, result) {
+                expect(result).to.deep.equal(successResultOfIntentPlus);
                 done();
             });
         });
 
-        it('should catch errors if an exception is thrown during the request', function (done) {
+        it('should receive the success result if an intent plus another entity were found (2)', function (done) {
+            witRecognizer.recognize({ message: { text: 'intent plus interval' }}, function (err, result) {
+                expect(result).to.deep.equal(successResultOfIntentPlusInterval);
+                done();
+            });
+        });
+
+        it('should receive the success result if only an intent was found', function (done) {
+            witRecognizer.recognize({ message: { text: 'intent only' }}, function (err, result) {
+                expect(result).to.deep.equal(successResultOfIntentOnly);
+                done();
+            });
+        });
+
+        it('should catch thrown exceptions', function (done) {
             witRecognizer.recognize({ message: { text: 'exception' }}, function (err) {
                 expect(err.message).to.equal('Something failed');
                 done();
