@@ -25,13 +25,17 @@ bot.dialog('/', intents)
 ```
 
 ## Enable Response Caching
-The response object from Wit.ai can easily be cached with Redis or Memcached.
+If caching is enabled, the WitRecognizer will try to serve the cached result first,
+and only send a request to Wit.ai when necessary. 
+The subsequent response from Wit.ai will be cached for the configured duration.
 ```
-// Create a Redis client...
+// An example
+// ----------
+// Create a Redis client
 const redis = require('redis');
-const redisClient = redis.createClient(options);
+const redisClient = redis.createClient({/* options */});
 
-// Or Memcached client
+// Or a Memcached client
 const Memcached = require('memcached');
 const memcached = new Memcached('hostname:11211');
 
