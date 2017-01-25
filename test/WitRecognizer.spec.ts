@@ -1,22 +1,71 @@
 ///<reference path="../node_modules/typescript/lib/lib.es6.d.ts" />
 const WitRecognizer = require('../lib/WitRecognizer');
+const RedisAdapter = require('../lib/adapters/RedisAdapter');
+const MemcachedAdapter = require('../lib/adapters/MemcachedAdapter');
 import { Wit } from 'node-wit';
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 
 describe('WitRecognizer', function () {
     describe('constructor', function () {
+        const invalidAccessToken = 'Invalid argument. Constructor must be invoked with an accessToken of type "string".';
+        const invalidCache = 'Invalid cache client. View the module\'s README.md for more details => https://github.com/sebsylvester/botbuilder-wit/blob/master/README.md';
         it('should fail if not called with an accessToken', function () {
             function throwsException () {
-                new WitRecognizer();
+                new WitRecognizer(null, {});
             }
-            expect(throwsException).to.throw('Could not find access token, learn more at https://wit.ai/docs');
+            expect(throwsException).to.throw(invalidAccessToken);
         });
 
-        it('should not fail if called with an accessToken', function () {
+        it('should fail if called with a non-string accessToken', function () {
             function throwsException () {
+                new WitRecognizer({ accessToken: 'foo' });
+            }
+            expect(throwsException).to.throw(invalidAccessToken);
+        });
+
+        it('should not fail if called with an accessToken of type "string"', function () {
+            function throwsNoException () {
                 new WitRecognizer("access token");
             }
-            expect(throwsException).not.to.throw(Error);
+            expect(throwsNoException).not.to.throw(Error);
+        });
+
+        it('should set the key expire duration to the value of the provided expire option ', function () {
+            function RedisClient() {};
+            const recognizer = new WitRecognizer("access token", { cache: new RedisClient(), expire: 3600 });
+            expect(recognizer.cacheAdapter.expire).to.equal(3600);
+        });
+
+        it('should use a default expire value when the expire option is absent or invalid', function () {
+            function RedisClient() {};
+            const recognizer_1 = new WitRecognizer("access token", { cache: new RedisClient() });
+            // Should use default when expire option is absent
+            expect(recognizer_1.cacheAdapter.expire).to.equal(3 * 3600);
+            const recognizer_2 = new WitRecognizer("access token", { cache: new RedisClient(), expire: '3600' });
+            // Should use default when expire option is not a number
+            expect(recognizer_2.cacheAdapter.expire).to.equal(3 * 3600);
+        });
+
+        it('should have a cacheAdapter of type RedisAdapter when using Redis', function () {
+            function RedisClient() {};
+            const recognizer = new WitRecognizer("access token", { cache: new RedisClient() });
+            expect({}).to.be.instanceOf(Object);
+            expect(recognizer.cacheAdapter).to.be.instanceOf(RedisAdapter.default);
+        });
+
+        it('should have a cacheAdapter of type MemcachedAdapter when using Memcached', function () {
+            function Client() {};
+            const recognizer = new WitRecognizer("access token", { cache: new Client() });
+            expect(recognizer.cacheAdapter).to.be.instanceOf(MemcachedAdapter.default);
+        });
+
+        it('should throw an exception when providing an unknown cache client', function () {
+            function UnknownClient() {};
+            function throwsException () {
+                new WitRecognizer("access token", { cache: new UnknownClient() });
+            }
+            expect(throwsException).to.throw(invalidCache);
         });
     });
 
@@ -71,7 +120,6 @@ describe('WitRecognizer', function () {
 
         // Response from Wit.ai when an intent and two entities were found, one of which is of type 'interval'
         const wit_intent_plus_interval_response = {
-            "msg_id" : "a7033991-c2e6-4ccb-b8b6-f0e77f7fc2f6",
             "_text" : " Set the alarm tomorrow morning",
             "entities" : {
                 intent: [{ value: "set_alarm", confidence: 0.99 }],
@@ -298,6 +346,163 @@ describe('WitRecognizer', function () {
         it('should catch thrown exceptions', function (done) {
             witRecognizer.recognize({ message: { text: 'exception' }}, function (err) {
                 expect(err.message).to.equal('Something failed');
+                done();
+            });
+        });
+    });
+
+    describe('#getClientType()', function () {
+        it('should return 0 for unknown clients', function () {
+            const witRecognizer = new WitRecognizer("access token");
+            function UnknownClient() {};
+            let type = witRecognizer.getClientType(new UnknownClient());
+            // 0 equals CacheClients.Unknown
+            expect(type).to.equal(0);
+            // Test with invalid input
+            type = type = witRecognizer.getClientType('client');
+            expect(type).to.equal(0);
+        });
+
+        it('should return 1 for Redis clients', function () {
+            const witRecognizer = new WitRecognizer("access token");
+            function RedisClient() {};
+            const type = witRecognizer.getClientType(new RedisClient());
+            // 0 equals CacheClients.Redis
+            expect(type).to.equal(1);
+        });
+
+        it('should return 1 for Redis clients', function () {
+            const witRecognizer = new WitRecognizer("access token");
+            function Client() {};
+            const type = witRecognizer.getClientType(new Client());
+            // 0 equals CacheClients.Memcached
+            expect(type).to.equal(2);
+        });
+    });
+
+    describe('#witDecorator()', function () {
+        // Redis client mock
+        function RedisClient() {};        
+
+        const witRecognizer = new WitRecognizer('accessToken', { cache: new RedisClient() });
+        // const originalMessage = witRecognizer.witClient.message;
+        const witSuccessResponse = {
+            _text: "There's a bar and a baz in here somewhere",
+            entities: {
+                intent: [{ value: "foo", confidence: 0.99 }],
+                bar_entity: [{ type: "value", value: "bar", confidence: 0.95 }],
+                baz_entity: [{ type: "value", value: "baz", confidence: 0.85 }]
+            }
+        };
+        // Typical response from Wit.ai if incorrect authorization token was used.
+        const witErrorResponse = {
+            error : "Bad auth, check token/params",
+            code : "no-auth"
+        };
+
+        it('should return the cached result when possible', function (done) {
+            const message = () => {
+                throw new Error('message() should not have been invoked.');
+            };
+            RedisClient.prototype.get = (key, callback) => {
+                callback(null, JSON.stringify(witSuccessResponse));
+            };
+
+            const decoratedMessage = witRecognizer.witDecorator(message);
+            decoratedMessage("There's a bar and a baz in here somewhere").then(res => {
+                expect(res).to.deep.equal(witSuccessResponse);
+                done();
+            });
+        });
+
+        it('should use Wit.ai if the cache returned an error', function (done) {
+            const message = () => {
+                return Promise.resolve(witSuccessResponse);
+            };
+            // Force the cache to return an error
+            RedisClient.prototype.get = (key, callback) => {
+                callback(new Error('Something failed'));
+            };
+            RedisClient.prototype.set = (key, value, option, expire, callback) => {
+                callback(null, 'OK');
+            };
+
+            const decoratedMessage = witRecognizer.witDecorator(message);
+            decoratedMessage("There's a bar and a baz in here somewhere").then(res => {
+                expect(res).to.deep.equal(witSuccessResponse);
+                done();
+            });
+        });
+
+        it('should use Wit.ai if the cached result could not be parsed', function (done) {
+            const message = () => {
+                return Promise.resolve(witSuccessResponse);
+            };
+            // Force the cache to return a response that cannot be parsed as JSON
+            RedisClient.prototype.get = (key, callback) => {
+                const triggersParsingError = JSON.stringify(witSuccessResponse) + '}';
+                callback(null, triggersParsingError);
+            };
+
+            const decoratedMessage = witRecognizer.witDecorator(message);
+            decoratedMessage("There's a bar and a baz in here somewhere").then(res => {
+                expect(res).to.deep.equal(witSuccessResponse);
+                done();
+            });            
+        });
+
+        it('should catch errors while accessing Wit.ai', function (done) {
+            const message = () => {
+                return Promise.reject(new Error('Something failed'));
+            };
+            // Force the cache to return no response. This triggers a new request to Wit.ai.
+            RedisClient.prototype.get = (key, callback) => {
+                callback(null, null);
+            };
+
+            const decoratedMessage = witRecognizer.witDecorator(message);
+            decoratedMessage("There's a bar and a baz in here somewhere").catch(err => {
+                expect(err.message).to.equal('Something failed');
+                done();
+            });
+        });
+
+        it('should not cache the response from Wit.ai if it contains an error message', function (done) {
+            const message = () => {
+                return Promise.resolve(witErrorResponse);
+            };
+            // Force the cache to return no response. This triggers a new request to Wit.ai.
+            RedisClient.prototype.get = (key, callback) => {
+                callback(null, null);
+            };
+
+            const decoratedMessage = witRecognizer.witDecorator(message);
+            decoratedMessage("There's a bar and a baz in here somewhere").then(res => {
+                expect(res).to.deep.equal(witErrorResponse);
+                done();
+            });
+        });
+
+        it('should log the error if caching the response from Wit.ai failed', function (done) {
+            const message = () => {
+                return Promise.resolve(witSuccessResponse);
+            };
+            // Force the cache to return no response. This triggers a new request to Wit.ai.
+            RedisClient.prototype.get = (key, callback) => {
+                callback(null, null);
+            };
+            RedisClient.prototype.set = (key, value, option, expire, callback) => {
+                callback(new Error('Something failed'));
+            };
+
+            const decoratedMessage = witRecognizer.witDecorator(message);
+            sinon.stub(console, "error", (message) => {
+                expect(message).to.equal('Something failed');
+                
+            });
+            decoratedMessage("There's a bar and a baz in here somewhere").then(res => {
+                expect(res).to.deep.equal(witSuccessResponse);
+                (<any>console.error).restore();
                 done();
             });
         });
