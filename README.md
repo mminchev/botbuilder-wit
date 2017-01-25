@@ -4,13 +4,13 @@
 [![Build Status](https://travis-ci.org/sebsylvester/botbuilder-wit.svg?branch=master)](https://travis-ci.org/sebsylvester/botbuilder-wit)
 [![codecov](https://codecov.io/gh/sebsylvester/botbuilder-wit/branch/master/graph/badge.svg)](https://codecov.io/gh/sebsylvester/botbuilder-wit)
 
-Node.js module that provides [Wit.ai](https://wit.ai) NLP integration for the [Microsoft Bot Builder SDK](https://dev.botframework.com/).
+Node.js module that provides [Wit.ai](https://wit.ai) NLP integration for the [Microsoft Bot Builder SDK](https://dev.botframework.com/), with built-in support for caching with Redis and Memcached.
 
 ## Installation
 
 `npm install --save botbuilder-wit`
 
-## Usage
+## General Usage
 This package does **not** work with Wit.ai's *Story* feature. It was designed to be used in conjunction with the IntentDialog class.
 ```
 const { IntentDialog } = require('botbuilder');
@@ -23,6 +23,23 @@ intents.onDefault(session => {...});
 
 bot.dialog('/', intents)
 ```
+
+## Enable Response Caching
+The response object from Wit.ai can easily be cached with Redis or Memcached.
+```
+// Create a Redis client...
+const redis = require('redis');
+const redisClient = redis.createClient(options);
+
+// Or Memcached client
+const Memcached = require('memcached');
+const memcached = new Memcached('hostname:11211');
+
+// Configure the recognizer to use the client
+// Set an optional key expire duration in seconds, defaults to 3 hours
+const recognizer = new WitRecognizer('Wit.ai_access_token', { cache: redisClient, expire: 3600 });
+```
+
 
 ## Using Entities
 
