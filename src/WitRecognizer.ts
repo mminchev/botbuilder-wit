@@ -1,4 +1,9 @@
+///<reference path="../node_modules/typescript/lib/lib.es6.d.ts" />
 import { Wit } from 'node-wit';
+import * as crypto from 'crypto';
+import CacheAdapter from './adapters/CacheAdapter';
+import RedisAdapter from './adapters/RedisAdapter';
+import MemcachedAdapter from './adapters/MemcachedAdapter';
 
 // Type of the object that represents an intent that is part of WitRecognizer's result
 interface IIntent {
@@ -53,28 +58,74 @@ interface IWitResults {
     error?: string;
 }
 
+interface IOptions {
+    cache?: any;
+    expire?: number
+}
+
+enum CacheClients {
+    Unknown, // 0
+    Redis,  
+    Memcached,
+}
 
 /**
  * The WitRecognizer class that is used in conjunction with an IntentDialog.
+ * @class
  * Example:
  * const recognizer = new WitRecognizer('Wit.ai_access_token');
  * const dialog = new IntentDialog({recognizers: [recognizer]});
  */
 class WitRecognizer {
     public witClient: Wit;
+    public cacheAdapter: CacheAdapter = null;
 
     /**
-     * Creates an instance of WitRecognizer. Requires a valid API token from Wit.ai
-     * @param accessToken {string}
+     * Creates an instance of WitRecognizer.
+     * @param accessToken {string} API token from Wit.ai
+     * @param cache {any} Redis or Memcached client 
      */
-    constructor(accessToken: string) {
+    constructor(accessToken: string, options: IOptions = {}) {
+        const { cache } = options;
+        
+        if (!accessToken || typeof accessToken !== 'string') {
+            throw new Error('Invalid argument. Constructor must be invoked with an accessToken of type "string".');
+        }        
         this.witClient = new Wit({ accessToken });
+        
+        // Evaluate the type of the cache client
+        // Instantiate a corresponding adapter
+        if (cache) {  
+            // By default, key's will expire after 3 hours
+            const expire = typeof options.expire === 'number' ? options.expire : 3 * 3600;
+            const clientType = this.getClientType(cache);
+
+            if(clientType !== CacheClients.Unknown) {
+                const _message = this.witClient.message;
+                // Override the original message function with a new implementation
+                // that checks the cache first before sending a request to Wit.ai. 
+                // The response from Wit.ai is then stored in the cache.
+                this.witClient.message = this.witDecorator(_message);
+            }
+
+            // Instantiate the client's corresponding adapter
+            switch (clientType) {
+                case CacheClients.Redis:
+                    this.cacheAdapter = new RedisAdapter(cache, expire);
+                    break;
+                case CacheClients.Memcached:
+                    this.cacheAdapter = new MemcachedAdapter(cache, expire);
+                    break;
+                default: // CacheClients.Unknown
+                    throw new Error("Invalid cache client. View the module's README.md for more details => https://github.com/sebsylvester/botbuilder-wit/blob/master/README.md");
+            }
+        }
     }
 
     /**
-     * Makes a request to Wit.ai and parses the response in a way the Bot Builder SDK understands
-     * @param context {Object}
-     * @param done {function}
+     * Makes a request to Wit.ai and parses the response in a way the Bot Builder SDK understands.
+     * @param {IRecognizeContext} context - contains the message received from the user
+     * @param {function} done - the result callback
      */
     recognize(context: IRecognizeContext, done: (err: Error, result: IIntentRecognizerResult) => void) {
         let result = <IIntentRecognizerResult>{ score: 0.0, intent: null };
@@ -155,6 +206,85 @@ class WitRecognizer {
         } else {
             done(null, result);
         }
+    }
+
+    /**
+     * Determines the type of the provided cache client.
+     * @param {*} client - the client with which the results will be saved to the cache.
+     * @returns {CacheClients} any of the possible enum values
+     */
+    getClientType(client: any): CacheClients {
+        let clientType = CacheClients.Unknown;
+        
+        if (typeof client === 'object' && client.constructor) {
+            switch (client.constructor.name) {
+                case 'RedisClient': 
+                    clientType = CacheClients.Redis;
+                    break;
+                case 'Client':
+                    clientType = CacheClients.Memcached;
+            }
+        }
+
+        return clientType;
+    }
+
+    /**
+     * The decorator function that adds caching to the Wit.ai request/response cycle.
+     * @param {function} message - the original Wit.message function that will be decorated
+     * @returns {function} the decorated function
+     */
+    witDecorator(message: Function): (utterance: string) => any {
+        return (utterance) => {
+            return new Promise((resolve, reject) => {
+                // Create hash from the utterance.
+                const hash = crypto.createHash('sha256');
+                hash.update(utterance);
+                const key = hash.digest('hex');
+
+                // Check if the key exists
+                this.cacheAdapter.get(key, (error, result) => {
+                    if (error) {     
+                        console.error(error);
+                        // If something failed while accessing the cache, 
+                        // it's still possible to continue and access Wit.ai, 
+                        // so there is no need to invoke reject(error)
+                        return resolve(null);
+                    }
+
+                    try {
+                        resolve(result ? JSON.parse(result) : null);
+                    } catch (error) { 
+                        resolve(null);
+                    }                         
+                });
+            }).then(result => {
+                if (result) {
+                    // Return the result, skip Wit.ai
+                    return Promise.resolve(result);
+                } else {
+                    // No cached result was found, use Wit.ai to parse the utterance
+                    const witPromise = message(utterance);                         
+                    witPromise.then((result: IWitResults) => {
+                        // Cache the result from Wit.ai unless it contains an error message
+                        // Possible error would be: "Bad auth, check token/params"
+                        if (!result.error) {
+                            const hash = crypto.createHash('sha256');
+                            hash.update(utterance);
+                            const key = hash.digest('hex');
+                            const value = JSON.stringify(result);                                    
+                            this.cacheAdapter.set(key, value, (error, result) => {
+                                if (error) console.error(error);
+                            });
+                        }
+                    }).catch((error: Error) => {
+                        console.error(error)
+                    });
+
+                    return witPromise;
+                }
+            });
+        };
     }
 }
 

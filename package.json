@@ -5,7 +5,9 @@
   "main": "lib/WitRecognizer.js",
   "scripts": {
     "build": "tsc",
+    "build:watch": "tsc --watch",
     "pretest": "tsc test/*.ts --module commonjs --sourcemap",
+    "pretest:watch": "tsc test/*.ts --module commonjs --sourcemap --watch",
     "test": "nyc --reporter=lcov mocha",
     "posttest": "nyc report --reporter=json && codecov -f coverage/*.json"
   },
