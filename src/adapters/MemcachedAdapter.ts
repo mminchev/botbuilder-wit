@@ -3,7 +3,7 @@ import { ResultCallback } from './CacheAdapter';
 
 export default class MemcachedAdapter extends CacheAdapter {
     constructor(public memcachedClient: any, public expire: number) {
-        super();
+        super(expire);
     }
 
     /**
@@ -23,4 +23,13 @@ export default class MemcachedAdapter extends CacheAdapter {
     set(key: string, value: string, callback: ResultCallback) {
         this.memcachedClient.set(key, value, this.expire, callback);
     }
+
+    /**
+     * Implements the CacheAdapter's abstract touch method
+     * @param {string} key - the value of the key of which the TTL will be reset
+     * @param {function} callback - the result callback
+     */
+    touch(key: string, callback: ResultCallback) {
+        this.memcachedClient.touch(key, this.expire, callback);
+    };
 }
