@@ -11,34 +11,34 @@ describe('WitRecognizer', function () {
         const invalidAccessToken = 'Invalid argument. Constructor must be invoked with an accessToken of type "string".';
         const invalidCache = 'Invalid cache client. View the module\'s README.md for more details => https://github.com/sebsylvester/botbuilder-wit/blob/master/README.md';
         it('should fail if not called with an accessToken', function () {
-            function throwsException () {
+            function throwsException() {
                 new WitRecognizer(null, {});
             }
             expect(throwsException).to.throw(invalidAccessToken);
         });
 
         it('should fail if called with a non-string accessToken', function () {
-            function throwsException () {
+            function throwsException() {
                 new WitRecognizer({ accessToken: 'foo' });
             }
             expect(throwsException).to.throw(invalidAccessToken);
         });
 
         it('should not fail if called with an accessToken of type "string"', function () {
-            function throwsNoException () {
+            function throwsNoException() {
                 new WitRecognizer("access token");
             }
             expect(throwsNoException).not.to.throw(Error);
         });
 
         it('should set the key expire duration to the value of the provided expire option ', function () {
-            function RedisClient() {};
+            function RedisClient() { };
             const recognizer = new WitRecognizer("access token", { cache: new RedisClient(), expire: 3600 });
             expect(recognizer.cacheAdapter.expire).to.equal(3600);
         });
 
         it('should use a default expire value when the expire option is absent or invalid', function () {
-            function RedisClient() {};
+            function RedisClient() { };
             const recognizer_1 = new WitRecognizer("access token", { cache: new RedisClient() });
             // Should use default when expire option is absent
             expect(recognizer_1.cacheAdapter.expire).to.equal(3 * 3600);
@@ -48,21 +48,21 @@ describe('WitRecognizer', function () {
         });
 
         it('should have a cacheAdapter of type RedisAdapter when using Redis', function () {
-            function RedisClient() {};
+            function RedisClient() { };
             const recognizer = new WitRecognizer("access token", { cache: new RedisClient() });
             expect({}).to.be.instanceOf(Object);
             expect(recognizer.cacheAdapter).to.be.instanceOf(RedisAdapter.default);
         });
 
         it('should have a cacheAdapter of type MemcachedAdapter when using Memcached', function () {
-            function Client() {};
+            function Client() { };
             const recognizer = new WitRecognizer("access token", { cache: new Client() });
             expect(recognizer.cacheAdapter).to.be.instanceOf(MemcachedAdapter.default);
         });
 
         it('should throw an exception when providing an unknown cache client', function () {
-            function UnknownClient() {};
-            function throwsException () {
+            function UnknownClient() { };
+            function throwsException() {
                 new WitRecognizer("access token", { cache: new UnknownClient() });
             }
             expect(throwsException).to.throw(invalidCache);
@@ -81,8 +81,8 @@ describe('WitRecognizer', function () {
 
         // Typical response from Wit.ai if incorrect authorization token was used.
         const wit_error_response = {
-            error : "Bad auth, check token/params",
-            code : "no-auth"
+            error: "Bad auth, check token/params",
+            code: "no-auth"
         };
 
         // Response from Wit.ai when no intent or other entities were found
@@ -120,39 +120,39 @@ describe('WitRecognizer', function () {
 
         // Response from Wit.ai when an intent and two entities were found, one of which is of type 'interval'
         const wit_intent_plus_interval_response = {
-            "_text" : " Set the alarm tomorrow morning",
-            "entities" : {
+            "_text": " Set the alarm tomorrow morning",
+            "entities": {
                 intent: [{ value: "set_alarm", confidence: 0.99 }],
-                "reminder" : [ {
-                    "confidence" : 0.7947374127577925,
-                    "entities" : { },
-                    "type" : "value",
-                    "value" : "Set the alarm",
-                    "suggested" : true
-                } ],
-                "datetime" : [ {
-                    "confidence" : 0.9978530104247438,
-                    "values" : [ {
-                        "to" : {
-                            "value" : "2017-01-14T12:00:00.000Z",
-                            "grain" : "hour"
+                "reminder": [{
+                    "confidence": 0.7947374127577925,
+                    "entities": {},
+                    "type": "value",
+                    "value": "Set the alarm",
+                    "suggested": true
+                }],
+                "datetime": [{
+                    "confidence": 0.9978530104247438,
+                    "values": [{
+                        "to": {
+                            "value": "2017-01-14T12:00:00.000Z",
+                            "grain": "hour"
                         },
-                        "from" : {
-                            "value" : "2017-01-14T04:00:00.000Z",
-                            "grain" : "hour"
+                        "from": {
+                            "value": "2017-01-14T04:00:00.000Z",
+                            "grain": "hour"
                         },
-                        "type" : "interval"
-                    } ],
-                    "to" : {
-                        "value" : "2017-01-14T12:00:00.000Z",
-                        "grain" : "hour"
+                        "type": "interval"
+                    }],
+                    "to": {
+                        "value": "2017-01-14T12:00:00.000Z",
+                        "grain": "hour"
                     },
-                    "from" : {
-                        "value" : "2017-01-14T04:00:00.000Z",
-                        "grain" : "hour"
+                    "from": {
+                        "value": "2017-01-14T04:00:00.000Z",
+                        "grain": "hour"
                     },
-                    "type" : "interval"
-                } ]
+                    "type": "interval"
+                }]
             }
         };
 
@@ -207,17 +207,17 @@ describe('WitRecognizer', function () {
         const successResultOfIntentPlusInterval = {
             score: 0.99,
             intent: 'set_alarm',
-            intents: [ { intent: 'set_alarm', score: 0.99 } ],
+            intents: [{ intent: 'set_alarm', score: 0.99 }],
             entities: [
                 {
                     type: 'reminder',
                     entity: 'Set the alarm',
                     rawEntity: {
-                        "confidence" : 0.7947374127577925,
-                        "entities" : { },
-                        "type" : "value",
-                        "value" : "Set the alarm",
-                        "suggested" : true
+                        "confidence": 0.7947374127577925,
+                        "entities": {},
+                        "type": "value",
+                        "value": "Set the alarm",
+                        "suggested": true
                     },
                     score: 0.7947374127577925,
                     startIndex: 1,
@@ -227,27 +227,27 @@ describe('WitRecognizer', function () {
                     type: 'datetime',
                     entity: null,
                     rawEntity: {
-                        "confidence" : 0.9978530104247438,
-                        "values" : [ {
-                            "to" : {
-                                "value" : "2017-01-14T12:00:00.000Z",
-                                "grain" : "hour"
+                        "confidence": 0.9978530104247438,
+                        "values": [{
+                            "to": {
+                                "value": "2017-01-14T12:00:00.000Z",
+                                "grain": "hour"
                             },
-                            "from" : {
-                                "value" : "2017-01-14T04:00:00.000Z",
-                                "grain" : "hour"
+                            "from": {
+                                "value": "2017-01-14T04:00:00.000Z",
+                                "grain": "hour"
                             },
-                            "type" : "interval"
-                        } ],
-                        "to" : {
-                            "value" : "2017-01-14T12:00:00.000Z",
-                            "grain" : "hour"
+                            "type": "interval"
+                        }],
+                        "to": {
+                            "value": "2017-01-14T12:00:00.000Z",
+                            "grain": "hour"
                         },
-                        "from" : {
-                            "value" : "2017-01-14T04:00:00.000Z",
-                            "grain" : "hour"
+                        "from": {
+                            "value": "2017-01-14T04:00:00.000Z",
+                            "grain": "hour"
                         },
-                        "type" : "interval"
+                        "type": "interval"
                     },
                     score: 0.9978530104247438
                 }
@@ -261,7 +261,7 @@ describe('WitRecognizer', function () {
         };
 
         // Create a mock of the Wit.ai client
-        function Wit() {}
+        function Wit() { }
         Wit.prototype.message = function (message) {
             var promise;
 
@@ -295,56 +295,56 @@ describe('WitRecognizer', function () {
         witRecognizer.witClient = new Wit();
 
         it('should receive an error if Wit.ai responds with an error', function (done) {
-            witRecognizer.recognize({ message: { text: 'error' }}, function (err, result) {
+            witRecognizer.recognize({ message: { text: 'error' } }, function (err, result) {
                 expect(err.message).to.equal(wit_error_response.error);
                 done();
             });
         });
 
         it('should receive the default result if context.message.text is undefined', function (done) {
-            witRecognizer.recognize({ message: {}}, function (err, result) {
+            witRecognizer.recognize({ message: {} }, function (err, result) {
                 expect(result).to.deep.equal(defaultResult);
                 done();
             });
         });
 
         it('should receive the default result if no entities were found', function (done) {
-            witRecognizer.recognize({ message: { text: 'no entities' }}, function (err, result) {
+            witRecognizer.recognize({ message: { text: 'no entities' } }, function (err, result) {
                 expect(result).to.deep.equal(defaultResult);
                 done();
             });
         });
 
         it('should receive the "none" intent if no intent but other entities were found', function (done) {
-            witRecognizer.recognize({ message: { text: 'no intent' }}, function (err, result) {
+            witRecognizer.recognize({ message: { text: 'no intent' } }, function (err, result) {
                 expect(result).to.deep.equal(intentIsNoneResult);
                 done();
             });
         });
 
         it('should receive the success result if an intent plus another entity were found (1)', function (done) {
-            witRecognizer.recognize({ message: { text: 'intent plus' }}, function (err, result) {
+            witRecognizer.recognize({ message: { text: 'intent plus' } }, function (err, result) {
                 expect(result).to.deep.equal(successResultOfIntentPlus);
                 done();
             });
         });
 
         it('should receive the success result if an intent plus another entity were found (2)', function (done) {
-            witRecognizer.recognize({ message: { text: 'intent plus interval' }}, function (err, result) {
+            witRecognizer.recognize({ message: { text: 'intent plus interval' } }, function (err, result) {
                 expect(result).to.deep.equal(successResultOfIntentPlusInterval);
                 done();
             });
         });
 
         it('should receive the success result if only an intent was found', function (done) {
-            witRecognizer.recognize({ message: { text: 'intent only' }}, function (err, result) {
+            witRecognizer.recognize({ message: { text: 'intent only' } }, function (err, result) {
                 expect(result).to.deep.equal(successResultOfIntentOnly);
                 done();
             });
         });
 
         it('should catch thrown exceptions', function (done) {
-            witRecognizer.recognize({ message: { text: 'exception' }}, function (err) {
+            witRecognizer.recognize({ message: { text: 'exception' } }, function (err) {
                 expect(err.message).to.equal('Something failed');
                 done();
             });
@@ -354,7 +354,7 @@ describe('WitRecognizer', function () {
     describe('#getClientType()', function () {
         it('should return 0 for unknown clients', function () {
             const witRecognizer = new WitRecognizer("access token");
-            function UnknownClient() {};
+            function UnknownClient() { };
             let type = witRecognizer.getClientType(new UnknownClient());
             // 0 equals CacheClients.Unknown
             expect(type).to.equal(0);
@@ -365,7 +365,7 @@ describe('WitRecognizer', function () {
 
         it('should return 1 for Redis clients', function () {
             const witRecognizer = new WitRecognizer("access token");
-            function RedisClient() {};
+            function RedisClient() { };
             const type = witRecognizer.getClientType(new RedisClient());
             // 0 equals CacheClients.Redis
             expect(type).to.equal(1);
@@ -373,7 +373,7 @@ describe('WitRecognizer', function () {
 
         it('should return 1 for Redis clients', function () {
             const witRecognizer = new WitRecognizer("access token");
-            function Client() {};
+            function Client() { };
             const type = witRecognizer.getClientType(new Client());
             // 0 equals CacheClients.Memcached
             expect(type).to.equal(2);
@@ -382,7 +382,10 @@ describe('WitRecognizer', function () {
 
     describe('#witDecorator()', function () {
         // Redis client mock
-        function RedisClient() {};        
+        function RedisClient() { };
+        RedisClient.prototype.expire = (key, expire, callback) => {
+            callback(null, 1);
+        };
 
         const witRecognizer = new WitRecognizer('accessToken', { cache: new RedisClient() });
         // const originalMessage = witRecognizer.witClient.message;
@@ -396,8 +399,8 @@ describe('WitRecognizer', function () {
         };
         // Typical response from Wit.ai if incorrect authorization token was used.
         const witErrorResponse = {
-            error : "Bad auth, check token/params",
-            code : "no-auth"
+            error: "Bad auth, check token/params",
+            code: "no-auth"
         };
 
         it('should return the cached result when possible', function (done) {
@@ -448,7 +451,7 @@ describe('WitRecognizer', function () {
             decoratedMessage("There's a bar and a baz in here somewhere").then(res => {
                 expect(res).to.deep.equal(witSuccessResponse);
                 done();
-            });            
+            });
         });
 
         it('should catch errors while accessing Wit.ai', function (done) {
@@ -496,9 +499,31 @@ describe('WitRecognizer', function () {
             };
 
             const decoratedMessage = witRecognizer.witDecorator(message);
-            sinon.stub(console, "error", (message) => {
-                expect(message).to.equal('Something failed');
-                
+            sinon.stub(console, "error", (error) => {
+                expect(error.message).to.equal('Something failed');
+            });
+            decoratedMessage("There's a bar and a baz in here somewhere").then(res => {
+                expect(res).to.deep.equal(witSuccessResponse);
+                (<any>console.error).restore();
+                done();
+            });
+        });
+
+        it('should log the error if refreshing the TTL failed', function (done) {
+            const message = () => {
+                return Promise.resolve(witSuccessResponse);
+            };
+            // Force the cache to return no response. This triggers a new request to Wit.ai.
+            RedisClient.prototype.get = (key, callback) => {
+                callback(null, JSON.stringify(witSuccessResponse));
+            };
+            RedisClient.prototype.expire = (key, expire, callback) => {
+                callback(new Error('Something failed'));
+            };
+
+            const decoratedMessage = witRecognizer.witDecorator(message);
+            sinon.stub(console, "error", (error) => {
+                expect(error.message).to.equal('Something failed');
             });
             decoratedMessage("There's a bar and a baz in here somewhere").then(res => {
                 expect(res).to.deep.equal(witSuccessResponse);
