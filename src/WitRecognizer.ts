@@ -65,7 +65,7 @@ interface IOptions {
 
 enum CacheClients {
     Unknown, // 0
-    Redis,  
+    Redis,
     Memcached,
 }
 
@@ -87,20 +87,20 @@ class WitRecognizer {
      */
     constructor(accessToken: string, options: IOptions = {}) {
         const { cache } = options;
-        
+
         if (!accessToken || typeof accessToken !== 'string') {
             throw new Error('Invalid argument. Constructor must be invoked with an accessToken of type "string".');
-        }        
+        }
         this.witClient = new Wit({ accessToken });
-        
+
         // Evaluate the type of the cache client
         // Instantiate a corresponding adapter
-        if (cache) {  
+        if (cache) {
             // By default, key's will expire after 3 hours
             const expire = typeof options.expire === 'number' ? options.expire : 3 * 3600;
             const clientType = this.getClientType(cache);
 
-            if(clientType !== CacheClients.Unknown) {
+            if (clientType !== CacheClients.Unknown) {
                 const _message = this.witClient.message;
                 // Override the original message function with a new implementation
                 // that checks the cache first before sending a request to Wit.ai. 
@@ -215,10 +215,10 @@ class WitRecognizer {
      */
     getClientType(client: any): CacheClients {
         let clientType = CacheClients.Unknown;
-        
+
         if (typeof client === 'object' && client.constructor) {
             switch (client.constructor.name) {
-                case 'RedisClient': 
+                case 'RedisClient':
                     clientType = CacheClients.Redis;
                     break;
                 case 'Client':
@@ -236,15 +236,15 @@ class WitRecognizer {
      */
     witDecorator(message: Function): (utterance: string) => any {
         return (utterance) => {
-            return new Promise((resolve, reject) => {
-                // Create hash from the utterance.
-                const hash = crypto.createHash('sha256');
-                hash.update(utterance);
-                const key = hash.digest('hex');
+            // Create hash from the utterance.
+            const hash = crypto.createHash('sha256');
+            hash.update(utterance);
+            const key = hash.digest('hex');
 
+            return new Promise((resolve, reject) => {
                 // Check if the key exists
                 this.cacheAdapter.get(key, (error, result) => {
-                    if (error) {     
+                    if (error) {
                         console.error(error);
                         // If something failed while accessing the cache, 
                         // it's still possible to continue and access Wit.ai, 
@@ -254,25 +254,26 @@ class WitRecognizer {
 
                     try {
                         resolve(result ? JSON.parse(result) : null);
-                    } catch (error) { 
+                    } catch (error) {
                         resolve(null);
-                    }                         
+                    }
                 });
             }).then(result => {
                 if (result) {
+                    // Reset expire to initial value
+                    this.cacheAdapter.touch(key, (error, result) => {
+                        if (error) console.error(error);
+                    });
                     // Return the result, skip Wit.ai
                     return Promise.resolve(result);
                 } else {
                     // No cached result was found, use Wit.ai to parse the utterance
-                    const witPromise = message(utterance);                         
+                    const witPromise = message(utterance);
                     witPromise.then((result: IWitResults) => {
                         // Cache the result from Wit.ai unless it contains an error message
                         // Possible error would be: "Bad auth, check token/params"
                         if (!result.error) {
-                            const hash = crypto.createHash('sha256');
-                            hash.update(utterance);
-                            const key = hash.digest('hex');
-                            const value = JSON.stringify(result);                                    
+                            const value = JSON.stringify(result);
                             this.cacheAdapter.set(key, value, (error, result) => {
                                 if (error) console.error(error);
                             });
