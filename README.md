@@ -11,7 +11,6 @@ Node.js module that provides [Wit.ai](https://wit.ai) NLP integration for the [M
 `npm install --save botbuilder-wit`
 
 ## General Usage
-This package does **not** work with Wit.ai's *Story* feature. It was designed to be used in conjunction with the IntentDialog class.
 ```
 const { IntentDialog } = require('botbuilder');
 const WitRecognizer = require('botbuilder-wit');
@@ -21,7 +20,13 @@ const intents = new IntentDialog({recognizers: [recognizer]});
 intents.matches('intent.name', (session, args) => {...});
 intents.onDefault(session => {...});
 
-bot.dialog('/', intents)
+bot.dialog('/', intents);
+
+// Alternatively, you can add a global recognizer to the bot
+bot.recognizer(new WitRecognizer('Wit.ai_access_token'));
+bot.dialog('/doSomething', session => {...}).triggerAction({ 
+    matches: 'intent.name'
+});
 ```
 
 ## Enable Response Caching
