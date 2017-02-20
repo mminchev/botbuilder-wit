@@ -1,5 +1,4 @@
-///<reference path="../node_modules/typescript/lib/lib.es6.d.ts" />
-const WitRecognizer = require('../lib/WitRecognizer');
+const { WitRecognizer } = require('../lib/WitRecognizer');
 const RedisAdapter = require('../lib/adapters/RedisAdapter');
 const MemcachedAdapter = require('../lib/adapters/MemcachedAdapter');
 import { Wit } from 'node-wit';
@@ -419,6 +418,7 @@ describe('WitRecognizer', function () {
         });
 
         it('should use Wit.ai if the cache returned an error', function (done) {
+            sinon.stub(console, 'error', (error) => { });
             const message = () => {
                 return Promise.resolve(witSuccessResponse);
             };
@@ -433,6 +433,7 @@ describe('WitRecognizer', function () {
             const decoratedMessage = witRecognizer.witDecorator(message);
             decoratedMessage("There's a bar and a baz in here somewhere").then(res => {
                 expect(res).to.deep.equal(witSuccessResponse);
+                (<any>console).error.restore();
                 done();
             });
         });
@@ -456,7 +457,7 @@ describe('WitRecognizer', function () {
 
         it('should catch errors while accessing Wit.ai', function (done) {
             const message = () => {
-                return Promise.reject(new Error('Something failed'));
+                return Promise.reject(new Error('Test error message'));
             };
             // Force the cache to return no response. This triggers a new request to Wit.ai.
             RedisClient.prototype.get = (key, callback) => {
@@ -465,12 +466,12 @@ describe('WitRecognizer', function () {
 
             const decoratedMessage = witRecognizer.witDecorator(message);
             decoratedMessage("There's a bar and a baz in here somewhere").catch(err => {
-                expect(err.message).to.equal('Something failed');
+                expect(err.message).to.equal('Test error message');
                 done();
             });
         });
 
-        it('should not cache the response from Wit.ai if it contains an error message', function (done) {
+        it('should not cache the response from Wit.ai if it contains an error message', function (done) {            
             const message = () => {
                 return Promise.resolve(witErrorResponse);
             };
@@ -481,7 +482,7 @@ describe('WitRecognizer', function () {
 
             const decoratedMessage = witRecognizer.witDecorator(message);
             decoratedMessage("There's a bar and a baz in here somewhere").then(res => {
-                expect(res).to.deep.equal(witErrorResponse);
+                expect(res).to.deep.equal(witErrorResponse);                                
                 done();
             });
         });
