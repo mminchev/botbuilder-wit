@@ -1,18 +1,17 @@
-///<reference path="../node_modules/typescript/lib/lib.es6.d.ts" />
-import { Wit } from 'node-wit';
+import { Wit, WitContext } from 'node-wit';
 import * as crypto from 'crypto';
 import CacheAdapter from './adapters/CacheAdapter';
 import RedisAdapter from './adapters/RedisAdapter';
 import MemcachedAdapter from './adapters/MemcachedAdapter';
 
 // Type of the object that represents an intent that is part of WitRecognizer's result
-interface IIntent {
+export interface IIntent {
     intent: string;
     score: number;
 }
 
 // Type of the object(s) that represents an entity that is part of WitRecognizer's result
-interface IEntity {
+export interface IEntity {
     entity: string;
     // The rawEntity property is included because Wit.ai doesn't have a perfectly consistent JSON response object.
     // In most cases there is a "value" property whose string value is then assigned to entity. 
@@ -26,12 +25,12 @@ interface IEntity {
 }
 
 // Type of the first argument of the recognize method. Contains the message text.
-interface IRecognizeContext {
+export interface IRecognizeContext {
     message: { text: string };
 }
 
 // Type of the second argument of the recognize method. Contains the processed result.
-interface IIntentRecognizerResult {
+export interface IIntentRecognizerResult {
     score: number;
     intent: string;
     intents?: IIntent[];
@@ -58,12 +57,12 @@ interface IWitResults {
     error?: string;
 }
 
-interface IOptions {
+export interface IOptions {
     cache?: any;
     expire?: number
 }
 
-enum CacheClients {
+export enum CacheClients {
     Unknown, // 0
     Redis,
     Memcached,
@@ -76,7 +75,7 @@ enum CacheClients {
  * const recognizer = new WitRecognizer('Wit.ai_access_token');
  * const dialog = new IntentDialog({recognizers: [recognizer]});
  */
-class WitRecognizer {
+export class WitRecognizer {
     public witClient: Wit;
     public cacheAdapter: CacheAdapter = null;
 
@@ -133,7 +132,7 @@ class WitRecognizer {
             const utterance = context.message.text;
 
             // Send a request to Wit.ai
-            this.witClient.message(utterance)
+            this.witClient.message(utterance, <WitContext>{})
                 .then((response: IWitResults) => {
                     // Check if Wit.ai responded with an error
                     if (response.error) {
@@ -288,5 +287,3 @@ class WitRecognizer {
         };
     }
 }
-
-module.exports = WitRecognizer;
