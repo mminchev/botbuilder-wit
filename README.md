@@ -12,8 +12,9 @@ Node.js module that provides [Wit.ai](https://wit.ai) NLP integration for the [M
 
 ## General Usage
 ```
+// v2.x.x now uses a named export for the WitRecognizer class instead of module.exports
+const { WitRecognizer } = require('botbuilder-wit');
 const { IntentDialog } = require('botbuilder');
-const WitRecognizer = require('botbuilder-wit');
 const recognizer = new WitRecognizer('Wit.ai_access_token');
 const intents = new IntentDialog({recognizers: [recognizer]});
 
