@@ -50,7 +50,6 @@ const memcached = new Memcached('hostname:11211');
 const recognizer = new WitRecognizer('Wit.ai_access_token', { cache: redisClient, expire: 3600 });
 ```
 
-
 ## Using Entities
 
 You can use the utility class [EntityRecognizer](https://docs.botframework.com/en-us/node/builder/chat-reference/classes/_botbuilder_d_.entityrecognizer.html) to parse & resolve common entities.
@@ -66,8 +65,6 @@ You can still use the Wit.ai client directly by accessing the ```witClient``` pr
 const recognizer = new WitRecognizer('Wit.ai_access_token');
 const witClient = recognizer.witClient;
 ```
-## Recompiling the TypeScript source
-If you want to recompile the source, you will need to make sure the ```node-wit``` dependency has a type definitions file in its root directory. Even though there is a TypeScript definitions package for node-wit you can install with ```npm install --save-dev @types/node-wit```, the compiler will complain when using it. So instead, you can use the minimalistic version in the resources directory that will do the job.
 
 ## License
 
