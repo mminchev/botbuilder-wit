@@ -1,10 +1,12 @@
 {
   "name": "botbuilder-wit",
-  "version": "2.0.4",
+  "version": "2.0.6",
   "description": "Provides Wit.ai NLP integration for the Microsoft Bot Builder SDK. Supports caching with Redis and Memcached.",
   "main": "lib/WitRecognizer",
+  "types": "lib/WitRecognizer",
   "scripts": {
     "build": "tsc",
+    "types": "tsc --declaration",
     "build:watch": "tsc --watch",
     "pretest": "tsc test/*.ts --module commonjs --sourcemap",
     "pretest:watch": "tsc test/*.ts --module commonjs --sourcemap --watch",
