@@ -159,7 +159,7 @@ describe('WitRecognizer', function () {
         const defaultResult = { score: 0.0, intent: null };
         const intentIsNoneResult = {
             intent: 'none',
-            score: 1.0,
+            score: 0.1,
             entities: [
                 {
                     type: 'bar_entity',
@@ -471,7 +471,7 @@ describe('WitRecognizer', function () {
             });
         });
 
-        it('should not cache the response from Wit.ai if it contains an error message', function (done) {            
+        it('should not cache the response from Wit.ai if it contains an error message', function (done) {
             const message = () => {
                 return Promise.resolve(witErrorResponse);
             };
@@ -482,7 +482,7 @@ describe('WitRecognizer', function () {
 
             const decoratedMessage = witRecognizer.witDecorator(message);
             decoratedMessage("There's a bar and a baz in here somewhere").then(res => {
-                expect(res).to.deep.equal(witErrorResponse);                                
+                expect(res).to.deep.equal(witErrorResponse);
                 done();
             });
         });
