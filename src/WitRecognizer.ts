@@ -14,7 +14,7 @@ export interface IIntent {
 export interface IEntity {
     entity: string;
     // The rawEntity property is included because Wit.ai doesn't have a perfectly consistent JSON response object.
-    // In most cases there is a "value" property whose string value is then assigned to entity. 
+    // In most cases there is a "value" property whose string value is then assigned to entity.
     // However, in case the value property is undefined, entity will be null.
     // In that case, it's necessary to be able to access the original entity via the "rawEntity" property.
     rawEntity: Object;
@@ -82,7 +82,7 @@ export class WitRecognizer {
     /**
      * Creates an instance of WitRecognizer.
      * @param accessToken {string} API token from Wit.ai
-     * @param cache {any} Redis or Memcached client 
+     * @param cache {any} Redis or Memcached client
      */
     constructor(accessToken: string, options: IOptions = {}) {
         const { cache } = options;
@@ -102,7 +102,7 @@ export class WitRecognizer {
             if (clientType !== CacheClients.Unknown) {
                 const _message = this.witClient.message;
                 // Override the original message function with a new implementation
-                // that checks the cache first before sending a request to Wit.ai. 
+                // that checks the cache first before sending a request to Wit.ai.
                 // The response from Wit.ai is then stored in the cache.
                 this.witClient.message = this.witDecorator(_message);
             }
@@ -164,9 +164,11 @@ export class WitRecognizer {
                         // Otherwise, the Bot Builder SDK will trigger the dialog's default handler
                         // with a default result object => { score: 0.0, intent: null }.
                         // Any other entities will not be included. The action below prevents this behavior.
+                        // Setting score to 0.1 lets the intent still be triggered but keeps it from
+                        // stomping on other models.
                         if (!result.intent) {
                             result.intent = 'none';
-                            result.score = 1.0;
+                            result.score = 0.1;
                         }
 
                         result.entities = [];
@@ -245,8 +247,8 @@ export class WitRecognizer {
                 this.cacheAdapter.get(key, (error, result) => {
                     if (error) {
                         console.error(error);
-                        // If something failed while accessing the cache, 
-                        // it's still possible to continue and access Wit.ai, 
+                        // If something failed while accessing the cache,
+                        // it's still possible to continue and access Wit.ai,
                         // so there is no need to invoke reject(error)
                         return resolve(null);
                     }
