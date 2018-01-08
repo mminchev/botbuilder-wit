@@ -1,6 +1,7 @@
 .idea
 .vscode
 .nyc_output
+.travis.yml
 src
 test
 tsconfig.json
