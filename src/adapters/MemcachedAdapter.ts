@@ -1,5 +1,5 @@
-import CacheAdapter from './CacheAdapter';
-import { ResultCallback } from './CacheAdapter';
+import { CacheAdapterResult } from "../types";
+import CacheAdapter from "./CacheAdapter";
 
 export default class MemcachedAdapter extends CacheAdapter {
     constructor(public memcachedClient: any, public expire: number) {
@@ -11,7 +11,7 @@ export default class MemcachedAdapter extends CacheAdapter {
      * @param {string} key - the value of the key to look up
      * @param {function} callback - the result callback
      */
-    get(key: string, callback: ResultCallback) {
+    public get(key: string, callback: CacheAdapterResult) {
         this.memcachedClient.get(key, callback);
     }
     /**
@@ -20,7 +20,7 @@ export default class MemcachedAdapter extends CacheAdapter {
      * @param {string} value - the value to be stored in the cache
      * @param {function} callback - the result callback
      */
-    set(key: string, value: string, callback: ResultCallback) {
+    public set(key: string, value: string, callback: CacheAdapterResult) {
         this.memcachedClient.set(key, value, this.expire, callback);
     }
 
@@ -29,7 +29,7 @@ export default class MemcachedAdapter extends CacheAdapter {
      * @param {string} key - the value of the key of which the TTL will be reset
      * @param {function} callback - the result callback
      */
-    touch(key: string, callback: ResultCallback) {
+    public touch(key: string, callback: CacheAdapterResult) {
         this.memcachedClient.touch(key, this.expire, callback);
-    };
+    }
 }

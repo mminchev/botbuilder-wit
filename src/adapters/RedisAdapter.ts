@@ -1,5 +1,5 @@
-import CacheAdapter from './CacheAdapter';
-import { ResultCallback } from './CacheAdapter';
+import { CacheAdapterResult } from "../types";
+import CacheAdapter from "./CacheAdapter";
 
 export default class RedisAdapter extends CacheAdapter {
     constructor(public redisClient: any, public expire: number) {
@@ -11,7 +11,7 @@ export default class RedisAdapter extends CacheAdapter {
      * @param {string} key - the value of the key to look up
      * @param {function} callback - the result callback
      */
-    get(key: string, callback: ResultCallback) {
+    public get(key: string, callback: CacheAdapterResult) {
         this.redisClient.get(key, callback);
     }
     /**
@@ -20,8 +20,8 @@ export default class RedisAdapter extends CacheAdapter {
      * @param {string} value - the value to be stored in the cache
      * @param {function} callback - the result callback
      */
-    set(key: string, value: string, callback: ResultCallback) {
-        this.redisClient.set(key, value, 'EX', this.expire, callback);
+    public set(key: string, value: string, callback: CacheAdapterResult) {
+        this.redisClient.set(key, value, "EX", this.expire, callback);
     }
 
     /**
@@ -29,7 +29,7 @@ export default class RedisAdapter extends CacheAdapter {
      * @param {string} key - the value of the key of which the TTL will be reset
      * @param {function} callback - the result callback
      */
-    touch(key: string, callback: ResultCallback) {
+    public touch(key: string, callback: CacheAdapterResult) {
         this.redisClient.expire(key, this.expire, callback);
-    };
+    }
 }
