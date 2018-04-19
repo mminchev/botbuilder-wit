@@ -56,6 +56,7 @@ export interface IWitResults {
 export interface IOptions {
     cache?: any;
     expire?: number;
+    prefix?: string;
 }
 
 export enum CacheClients {

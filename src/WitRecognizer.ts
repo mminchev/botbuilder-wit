@@ -22,6 +22,7 @@ import {
 export class WitRecognizer {
     public witClient: Wit;
     public cacheAdapter: CacheAdapter = null;
+    private prefix: string;
 
     /**
      * Creates an instance of WitRecognizer.
@@ -42,6 +43,10 @@ export class WitRecognizer {
         if (cache) {
             // By default, key's will expire after 3 hours
             const expire = typeof options.expire === "number" ? options.expire : 3 * 3600;
+
+            // Store the prefix if it exists
+            this.prefix = typeof options.prefix === "string" ? options.prefix : "";
+
             const clientType = this.getClientType(cache);
 
             if (clientType !== CacheClients.Unknown) {
@@ -185,7 +190,7 @@ export class WitRecognizer {
         return (utterance, context) => {
             // Create hash from the utterance.
             const hash = createHash("sha256").update(utterance);
-            const key = hash.digest("hex");
+            const key = this.prefix + hash.digest("hex");
 
             return new Promise<MessageResponse>((resolve, reject) => {
                 // Check if the key exists
