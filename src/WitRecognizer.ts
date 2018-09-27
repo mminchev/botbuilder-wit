@@ -128,7 +128,7 @@ export class WitRecognizer {
                                 const { type, value, confidence } = entity;
                                 const foundEntity = {
                                     type: key,
-                                    entity: null, // default value
+                                    entity: value,
                                     rawEntity: entity as {[key: string]: any},
                                     score: confidence,
                                 } as IEntity;
@@ -138,14 +138,13 @@ export class WitRecognizer {
                                 // "values" property instead. To deal with this variety of structures, there's a
                                 // "rawEntity" property to allow for custom entity processing in your own code.
                                 if (type === "value") {
-                                    // Overwrite the default value null, with a value that must be a string.
-                                    foundEntity.entity = value;
                                     // The startIndex and endIndex values will not always be useful.
                                     // For example, a datetime entity of type "value" will get a universal timestamp
                                     // as its value which cannot be found in the original message.
                                     foundEntity.startIndex = response._text.indexOf(value);
                                     foundEntity.endIndex = foundEntity.startIndex + (value.length - 1);
                                 }
+
                                 result.entities.push(foundEntity);
                             }
                         }
